@@ -39,7 +39,7 @@ def main () :
                 print ('third layer ...');
                 DIz = Image (z).chambolle1(); os.remove (z)
 
-                DI = cv2.merge ([DIy,DIy,DIx])
+                DI = cv2.merge ([DIz,DIy,DIx])
 
             else :
                 DI = Image (image).chambolle1()

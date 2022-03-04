@@ -47,7 +47,6 @@ class Image () :
         g = self.noisy_image
         old_p = np.zeros (np.shape ((g,g)))
 
-        start = time.time ()
         for i in tqdm (range (self.max_iter), ascii = True) :
             gd = grad (div(old_p) - np.divide (g, self.L))
 
@@ -66,7 +65,6 @@ class Image () :
         g = self.noisy_image
         old_p = np.zeros (np.shape ((g,g,g,g)))
 
-        start = time.time ()
         for i in tqdm (range (self.max_iter), ascii = True) :
             gd = hessian (hessian_adjoint(old_p) - np.divide (g, self.L))
 
