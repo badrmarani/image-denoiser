@@ -8,6 +8,8 @@ import os
 import numpy as np
 from matplotlib.pyplot import *
 from tqdm import tqdm
+import cv2
+
 
 # internal references
 from src.utils.noise import gaussian
@@ -43,6 +45,7 @@ class Image () :
         """
         return 20 * np.log10 (np.divide (norm(u), norm(self.noisy_image - u)))
 
+    @property
     def chambolle1  (self) :
         g = self.noisy_image
         old_p = np.zeros (np.shape ((g,g)))
@@ -54,13 +57,23 @@ class Image () :
 
             new_p = np.divide (old_p + np.dot (self.tau,gd) , 1 + self.tau*norm_gd)
 
-            if (x := np.max (np.abs (new_p - old_p))) < self.epsilon :
-                print (f'\nNumber of iterations {i}'); break
+            # if (x := np.max (np.abs (new_p - old_p))) < self.epsilon :
+            #     print (f'\nNumber of iterations {i}'); break
 
             old_p = new_p
 
-        return g - self.L * div (new_p)
 
+            ret = g - self.L * div (new_p)
+
+            os.chdir (os.path.abspath('../denoised/'))
+            if i in np.linspace (0, self.max_iter, 9, dtype = int) :
+                cv2.imwrite ('face_iter_' + str(i) + '.jpg', ret)
+            os.chdir (os.path.abspath('../imgs/'))
+
+
+        return None
+
+    @property
     def chambolle2  (self) :
         g = self.noisy_image
         old_p = np.zeros (np.shape ((g,g,g,g)))
@@ -70,7 +83,7 @@ class Image () :
 
             norm_gd = self.norm(gd)
 
-            new_p = np.divide (old_p + np.dot (self.tau,gd) , 1 + self.tau*norm_gd)
+            new_p = np.divide (old_p - np.dot (self.tau,gd) , 1 + self.tau*norm_gd)
 
             if (np.max (np.abs (new_p - old_p))) < self.epsilon :
                 print (f'\nNumber of iterations {i}'); break
