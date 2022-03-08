@@ -2,6 +2,8 @@
 # Created by https://www.toptal.com/developers/gitignore/api/tex,latex,python,jupyternotebooks
 # Edit at https://www.toptal.com/developers/gitignore?templates=tex,latex,python,jupyternotebooks
 
+runner.py
+
 ### JupyterNotebooks ###
 # gitignore template for Jupyter Notebooks
 # website: http://jupyter.org/

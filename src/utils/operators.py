@@ -65,12 +65,12 @@ def hessian (H) :
                 H11 [i,j] = H[i-1,j] - H[i,j]
 
             if 0 < i <= a-1 and 0 <= j < b-1 :
-                H12 [i,j] = H[i,j+1] - H[i,j] + H[i-1,j+1] + H[i-1,j]
+                H12 [i,j] = H[i,j+1] - H[i,j] - H[i-1,j+1] + H[i-1,j]
             elif i == 0 or i == a-1 :
                 H12 [i,j] = 0
 
             if 0 <= i < a-1 and 0 < j <= b-1 :
-                H21 [i,j] = H[i+1,j] - H[i,j] + H[i+1,j-1] + H[i,j-1]
+                H21 [i,j] = H[i+1,j] - H[i,j] - H[i+1,j-1] + H[i,j-1]
             elif i == 0 or i == a-1 :
                 H21 [i,j] = 0
 
