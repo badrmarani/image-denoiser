@@ -4,4 +4,5 @@ from . import optimization
 
 from .utils.noise import *
 from .utils.operators import *
+from .utils.misc import bcolors
 from .optimization.chambolle import *

@@ -30,7 +30,7 @@ class image_install (install):
     def run(self):
         mode = None
         while mode not in ['', 'install']:
-            mode = input("Installation mode: [develop]/install/cancel: ")
+            mode = input('Installation mode: [develop]/install/cancel: ')
         if mode == 'install':
             return install.run(self)
 
@@ -49,7 +49,7 @@ setup (
         'Topic :: Software Development :: Libraries :: Application Frameworks'
     ],
 
-    install_requires=["numpy", "matplotlib", "opencv-python", "tqdm"],
+    install_requires=['numpy', 'matplotlib', 'opencv-python', 'tqdm', 'argparse'],
 
     packages=find_packages(),
     package_data={},
