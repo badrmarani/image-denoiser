@@ -58,7 +58,9 @@ def projection_on_D2 (q) :
 
 
 def projection1 (image, mean = 0, sigma = 15, epsilon = 1, L = 10,
-                    step_size = .20, max_iter = 100, rho = 1/(9*15**2)) :
+                    step_size = .20, max_iter = 100) :
+
+    rho = 1/(33*(L)**2)
 
     (n,m) = np.shape(image)
     p = np.array ([np.zeros((n,m)), np.zeros((n,m))])
@@ -83,8 +85,8 @@ def projection1 (image, mean = 0, sigma = 15, epsilon = 1, L = 10,
         CRIT.append (x)
 
     PSNR = [0]
-    return u_new, CRIT, PSNR
-
+    SNR = [0]
+    return u_new, CRIT, SNR, PSNR
 
 def projection2 (image, mean = 0, sigma = 15, epsilon = 1, L = 10,
                     step_size = .20, max_iter = 100) :
@@ -117,4 +119,5 @@ def projection2 (image, mean = 0, sigma = 15, epsilon = 1, L = 10,
         CRIT.append (x)
 
     PSNR = [0]
-    return u_new, CRIT, PSNR
+    SNR = [0]
+    return u_new, CRIT, SNR, PSNR

@@ -1,91 +1,76 @@
 #!/usr/bin/env python3
 
-# internal references
-from source.optimization.chambolle import *
-from source.utils.misc import bcolors
 
 # third party
 import cv2
 from matplotlib.pyplot import *
+from tabulate import tabulate
 
 # standard libraries
 import os
 import time
 import argparse
 
+# internal references
+from source.optimization.chambolle import *
+from source.utils.display import Plotter
 
+from source.utils.misc import bcolors
 
-pparam = dict(xlabel='Iterations', ylabel='SNR')
-
-
-def run (max_iter = 100, mean = 0, sigma = 50,
-            L = 60, step_size = 0.015625, epsilon = 1e-4) :
+def run (max_iter, mean, sigma ,
+            L, step_size, epsilon) :
 
     os.chdir (dir := os.path.abspath('./data/imgs/'))
 
     for image in os.listdir(dir) :
         if image.endswith('.png') or image.endswith('.jpg') or image.endswith('.jpeg') :
-            SNRall = []
-            PSNRall = []
-
             name = os.path.splitext (image)[0]
-            print(f'{bcolors.HEADER}Processing: {name}{bcolors.ENDC}')
 
+            print(f'{bcolors.HEADER}Processing: {name}{bcolors.ENDC}')
             im = Image (image, max_iter = max_iter, mean = mean, sigma = sigma,
                         L = L, step_size = step_size, epsilon = epsilon)
 
             os.chdir (os.path.abspath('../results/'))
-            cv2.imwrite (str(name) + '_' + 'gaussian-noise'+ '.jpg', im.noisy_image)
+            cv2.imwrite (str(name) + '-GN-S(' + str(int(sigma)) + ').jpg', im.noisy_image)
 
-            for method in (methods := ['proj1', 'proj2']) :
-                print(f'{bcolors.OKBLUE}>>>> Variational Method:{bcolors.ENDC}', method)
+            for method in (methods := ['cham1']) :
+                print(
+                    f'{bcolors.OKBLUE}>>>> Variational Method:{bcolors.ENDC}', method,
+                    '\n', tabulate(
+                        [[max_iter, mean, sigma, L, step_size, epsilon]],
+                        headers=['Number of iterations', 'Mean', 'Noise', 'Lambda', 'Step size', 'Epsilon']), '\n'
+                )
 
-
-                DI, SNR, PSNR, sigma, L = im.denoise (ABS_IMG = image, method = method)
-
-
-                SNRall.append (SNR)
-                PSNRall.append (PSNR)
+                DI, CRIT, SNR, PSNR, sigma, L = im.denoise (ABS_IMG = image, method = method)
 
                 # Save the results
-                cv2.imwrite (str(name) + '_' + str(int(sigma)) + '-' + str(int(L)) + '_' + str(method)+ '.jpg', DI)
+                cv2.imwrite (str(name) + '-' + str(method).upper() + '-S(' + str(int(sigma)) + ')-L(' + str(int(L)) + ').jpg', DI)
                 os.chdir (os.path.abspath('../imgs/'))
 
+                #
+                # Here, I test each method alone.
+                #
 
-            # os.chdir (os.path.abspath('../results/'))
-            # with style.context(['science']):
-            #     grid (True)
-            #     plot (SNRall [0], label = 'cham1')
-            #     plot (SNRall [1], label = 'proj1')
-            #
-            #     legend(title = '$\max \|p^{n+1}-p^{n}\|_1$')
-            #
-            #     savefig(str(name) + '_' + str(int(sigma)) + '-' + str(int(L)) + '_1' + 'png', dpi=100)
-            #
-            #     close ()
-            #
-            # with style.context(['science']):
-            #     grid (True)
-            #     plot (SNRall [2], label = 'proj2')
-            #     plot (SNRall [3], label = 'cham2')
-            #
-            #     legend(title = '$\max \|p^{n+1}-p^{n}\|_1$')
-            #
-            #     savefig(str(name) + '_' + str(int(sigma)) + '-' + str(int(L)) + '_2' + 'png', dpi=100)
-            #
-            #     close ()
+                # print (PSNR [-1])
 
+                # # SNR
+                # PLOT = Plotter(
+                #     PSNR,
+                #     title = 'PSNR',
+                #     xaxis = 'Iterations', yaxis = 'SNR',
+                #     label = [method]
+                # ).display (save = True, name = 'test')
 
-
-            # print (f'{bcolors.HEADER}Results - ROF:{bcolors.ENDC}')
-            # for elt in SNRall[0:2] :
-            #     print (f'{bcolors.BOLD}SNR = {bcolors.ENDC}', elt[-1])
-            #
-            # print (f'{bcolors.HEADER}Results - ROF2:{bcolors.ENDC}')
-            # for elt in SNRall[2:4] :
-            #     print (f'{bcolors.BOLD}SNR = {bcolors.ENDC}', elt[-1])
+                # # $ \max (|p^{n+1} - p^{n}|) < \epsilon $
+                # PLOT = Plotter(
+                #     SNR,
+                #     title = 'SNR',
+                #     xaxis = 'Iterations', yaxis = 'SNR',
+                #     label = [method]
+                # ).display (save = True, name = 'test')
 
             os.chdir (os.path.abspath('../imgs/'))
+
 
 def main() :
     parser = argparse.ArgumentParser(description = 'Variational Image Denoising')
@@ -96,6 +81,7 @@ def main() :
     parser.add_argument('--step-size', default = .20, type = float)
     parser.add_argument('--epsilon', default = 1e-4, type = float)
     args = parser.parse_args()
+
     run(**vars(args))
 
 

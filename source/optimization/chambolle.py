@@ -48,9 +48,7 @@ class Image () :
         return np.sqrt (sum (np.power (u,2)))
 
     def norm_in_X (self, u) :
-        return np.sum (np.power (u,2))
-
-        # / np.product (np.shape (u))
+        return np.sum (np.power (u,2)) / np.product (np.shape (u))
 
     def norm_in_Y (self, u) :
         """ Reminder: $u \in Y = X \times X$
@@ -71,15 +69,7 @@ class Image () :
         """
         return 10 * np.log10 (np.divide (self.norm_in_X (self.image), self.norm_in_X (self.image - u)))
 
-    # @UPDATE.setter
-    # def UPDATE (self, IMG) :
-    #     self.noisy_image = gaussian
-
     def chambolle1  (self, K = None) :
-        # if K is not None :
-        #     self.image = imread (K)
-        #     self.noisy_image = gaussian (self.image, self.mean, self.sigma)
-
         g = self.noisy_image
 
         old_p = np.zeros (np.shape ((g,g)))
@@ -102,19 +92,28 @@ class Image () :
 
             old_p = new_p
 
-
             RET = g - self.L * div (new_p)
 
             CRIT.append (x)
             SNR.append (self.SNR (RET))
             PSNR.append (self.PSNR (RET))
 
-            # os.chdir (os.path.abspath('../denoised/'))
-            # if i in np.linspace (0, self.max_iter, 9, dtype = int) :
-            #     cv2.imwrite ('iter_' + str(i) + '.jpg', ret)
-            # os.chdir (os.path.abspath('../imgs/'))
+        return RET, CRIT, SNR, PSNR
 
-        return RET, CRIT, PSNR
+    def runner (self) :
+
+        r, c, s = [0], [0], [0]
+        P = [0]
+
+        PSNR = []
+
+        Sigma = np.linspace (0, 100, 5, dtype = int)
+        for s in Sigma :
+            r, c, s, P = self.chambolle1 ()
+
+            PSNR.append (P)
+
+        return Sigma, PSNR
 
     def chambolle2  (self, K = None) :
         # if K is not None :
@@ -137,7 +136,7 @@ class Image () :
 
             new_p = np.divide (old_p - np.dot (self.tau,gd) , 1 + self.tau*norm_gd)
 
-            if (x := np.max (np.abs (new_p - old_p))) < self.epsilon :
+            if (x := self.norm_in_Y (new_p - old_p)) < self.epsilon :
                 break
 
             old_p = new_p
@@ -148,30 +147,27 @@ class Image () :
             SNR.append (self.SNR (RET))
             PSNR.append (self.PSNR (RET))
 
-            # os.chdir (os.path.abspath('../denoised/'))
-            # if i in np.linspace (0, self.max_iter, 9, dtype = int) :
-            #     cv2.imwrite ('iter_' + str(i) + '.jpg', ret)
-            # os.chdir (os.path.abspath('../imgs/'))
+        return RET, CRIT, SNR, PSNR
 
-
-        return RET, CRIT, PSNR
-
-
-    def projection1 (self, K = None) :
+    def projection1 (self) :
         CRIT = [0]
         SNR = [0]
         PSNR = [0]
 
-        RET, CRIT, PSNR =  proj1 (image = self.noisy_image, mean = self.mean, sigma = self.sigma, epsilon = self.epsilon, L = self.L, step_size = self.tau, max_iter = self.max_iter)
+        RET, CRIT, SNR, PSNR = proj1 (image = self.noisy_image, mean = self.mean,
+                            sigma = self.sigma, epsilon = self.epsilon,
+                            L = self.L, step_size = self.tau, max_iter = self.max_iter)
 
         return RET, CRIT, PSNR
 
-    def projection2 (self, K = None) :
+    def projection2 (self) :
         CRIT = [0]
         SNR = [0]
         PSNR = [0]
 
-        RET, CRIT, PSNR =  proj2 (image = self.noisy_image, mean = self.mean, sigma = self.sigma, epsilon = self.epsilon, L = self.L, step_size = self.tau, max_iter = self.max_iter)
+        RET, CRIT, SNR, PSNR = proj2 (image = self.noisy_image, mean = self.mean,
+                            sigma = self.sigma, epsilon = self.epsilon,
+                            L = self.L, step_size = self.tau, max_iter = self.max_iter)
 
         return RET, CRIT, PSNR
 
@@ -186,21 +182,24 @@ class Image () :
         if method not in denoisers.keys() :
             raise ValueError('Unfortunately, this method is not yet implemented...')
         else :
-            if method == 'cham2' :
+            if method == 'cham1' :
+                self.L = 60
+            elif method == 'cham2' :
+                self.L = 50
                 self.epsilon = 1e-4
                 self.tau = 0.015625
-            elif method == 'cham1' :
-                pass
             elif method == 'proj1' :
+                self.L = 15
                 self.epsilon = 1
-                self.L = 10
-            elif method == 'proj2':
+            elif method == 'proj2' :
                 self.L = 15
 
             os.chdir (dir := os.path.abspath('../imgs/'))
             self.image = imread (ABS_IMG)
+
             if len (np.shape (self.image)) != 2 :
                 x, y, z = cv2.split (self.image)
+
                 w = []
                 DI = []
                 for i, elt in zip(range(1,4), [x,y,z]) :
@@ -226,23 +225,9 @@ class Image () :
                 except :
                     SNR = []
                     PSNR = []
-                return DI, SNR, PSNR, self.sigma, self.L
-
             else :
                 os.chdir (dir := os.path.abspath('../results/'))
+                DI, CRIT, SNR, PSNR = denoisers [method] ()
 
-                DI, SNR, PSNR = denoisers [method] ()
-                return DI, SNR, PSNR, self.sigma, self.L
-
-
-if __name__ == '__main__':
-    os.chdir (os.path.abspath('../../data/imgs'))
-    im = Image ('face.jpg')
-
-    A = [ [0.5, 1] ,
-          [0.5, 1] ]
-
-    q= [A,A]
-
-
-    print (im.projection_in_D (q))
+            CRIT = [0]
+            return DI, CRIT, SNR, PSNR, self.sigma, self.L
