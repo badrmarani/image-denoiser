@@ -37,10 +37,12 @@ def run (max_iter = 100, mean = 0, sigma = 50,
             os.chdir (os.path.abspath('../results/'))
             cv2.imwrite (str(name) + '_' + 'gaussian-noise'+ '.jpg', im.noisy_image)
 
-            for method in (methods := ['cham1', 'proj1', 'cham2', 'proj2']) :
+            for method in (methods := ['proj1', 'proj2']) :
                 print(f'{bcolors.OKBLUE}>>>> Variational Method:{bcolors.ENDC}', method)
 
-                DI, SNR, PSNR = im.denoise (ABS_IMG = image, method = method)
+
+                DI, SNR, PSNR, sigma, L = im.denoise (ABS_IMG = image, method = method)
+
 
                 SNRall.append (SNR)
                 PSNRall.append (PSNR)
@@ -50,25 +52,30 @@ def run (max_iter = 100, mean = 0, sigma = 50,
                 os.chdir (os.path.abspath('../imgs/'))
 
 
-            os.chdir (os.path.abspath('../results/'))
-            with style.context(['science']):
-                grid (True)
-                for method, elt in zip(['cham1, proj1'], SNRall[0:2]):
-                    plot (elt, label = str(method))
+            # os.chdir (os.path.abspath('../results/'))
+            # with style.context(['science']):
+            #     grid (True)
+            #     plot (SNRall [0], label = 'cham1')
+            #     plot (SNRall [1], label = 'proj1')
+            #
+            #     legend(title = '$\max \|p^{n+1}-p^{n}\|_1$')
+            #
+            #     savefig(str(name) + '_' + str(int(sigma)) + '-' + str(int(L)) + '_1' + 'png', dpi=100)
+            #
+            #     close ()
+            #
+            # with style.context(['science']):
+            #     grid (True)
+            #     plot (SNRall [2], label = 'proj2')
+            #     plot (SNRall [3], label = 'cham2')
+            #
+            #     legend(title = '$\max \|p^{n+1}-p^{n}\|_1$')
+            #
+            #     savefig(str(name) + '_' + str(int(sigma)) + '-' + str(int(L)) + '_2' + 'png', dpi=100)
+            #
+            #     close ()
 
-                legend(title = '$\max \|p^{n+1}-p^{n}\|_1$')
-                autoscale(tight = True)
-                savefig(str(name) + '_' + str(int(sigma)) + '-' + str(int(L)) + '_1' + '.jpg', dpi=300)
-                close ()
 
-                grid (True)
-                for method, elt in zip(['cham2, proj2'], SNRall[2:4]):
-                    plot (elt, label = str(method))
-
-                legend(title = '$\max \|p^{n+1}-p^{n}\|_1$')
-                autoscale(tight = True)
-                savefig(str(name) + '_' + str(int(sigma)) + '-' + str(int(L)) + '_2' + '.jpg', dpi=300)
-                close ()
 
             # print (f'{bcolors.HEADER}Results - ROF:{bcolors.ENDC}')
             # for elt in SNRall[0:2] :

@@ -12,11 +12,14 @@ import cv2
 
 
 # internal references
-from src.utils.noise import gaussian
-from src.utils.operators import div
-from src.utils.operators import grad
-from src.utils.operators import hessian
-from src.utils.operators import hessian_adjoint
+from source.utils.noise import gaussian
+from source.utils.operators import div
+from source.utils.operators import grad
+from source.utils.operators import hessian
+from source.utils.operators import hessian_adjoint
+
+from source.optimization.projection import projection1 as proj1
+from source.optimization.projection import projection2 as proj2
 
 class Image () :
     def __init__ (self, im, mean = 0, sigma = 12, epsilon = 1e-2, L = 20,
@@ -45,7 +48,9 @@ class Image () :
         return np.sqrt (sum (np.power (u,2)))
 
     def norm_in_X (self, u) :
-        return np.sum (np.power (u,2)) / np.product (np.shape (u))
+        return np.sum (np.power (u,2))
+
+        # / np.product (np.shape (u))
 
     def norm_in_Y (self, u) :
         """ Reminder: $u \in Y = X \times X$
@@ -151,37 +156,24 @@ class Image () :
 
         return RET, CRIT, PSNR
 
+
     def projection1 (self, K = None) :
-        if K is not None :
-            self.image = imread (K)
-            self.noisy_image = gaussian (self.image, self.mean, self.sigma)
-
-        g = self.noisy_image
-        old_p = np.zeros (np.shape ((g,g,g,g)))
-
-        RET = g
-
         CRIT = [0]
         SNR = [0]
         PSNR = [0]
 
-        return g, CRIT, PSNR
+        RET, CRIT, PSNR =  proj1 (image = self.noisy_image, mean = self.mean, sigma = self.sigma, epsilon = self.epsilon, L = self.L, step_size = self.tau, max_iter = self.max_iter)
+
+        return RET, CRIT, PSNR
 
     def projection2 (self, K = None) :
-        if K is not None :
-            self.image = imread (K)
-            self.noisy_image = gaussian (self.image, self.mean, self.sigma)
-
-        g = self.noisy_image
-        old_p = np.zeros (np.shape ((g,g,g,g)))
-
-        RET = g
-
         CRIT = [0]
         SNR = [0]
         PSNR = [0]
 
-        return g, CRIT, PSNR
+        RET, CRIT, PSNR =  proj2 (image = self.noisy_image, mean = self.mean, sigma = self.sigma, epsilon = self.epsilon, L = self.L, step_size = self.tau, max_iter = self.max_iter)
+
+        return RET, CRIT, PSNR
 
     def denoise (self, ABS_IMG, method) :
         denoisers = {
@@ -197,6 +189,13 @@ class Image () :
             if method == 'cham2' :
                 self.epsilon = 1e-4
                 self.tau = 0.015625
+            elif method == 'cham1' :
+                pass
+            elif method == 'proj1' :
+                self.epsilon = 1
+                self.L = 10
+            elif method == 'proj2':
+                self.L = 15
 
             os.chdir (dir := os.path.abspath('../imgs/'))
             self.image = imread (ABS_IMG)
@@ -227,8 +226,23 @@ class Image () :
                 except :
                     SNR = []
                     PSNR = []
-                return DI, SNR, PSNR
+                return DI, SNR, PSNR, self.sigma, self.L
 
             else :
                 os.chdir (dir := os.path.abspath('../results/'))
-                return denoisers [method] ()
+
+                DI, SNR, PSNR = denoisers [method] ()
+                return DI, SNR, PSNR, self.sigma, self.L
+
+
+if __name__ == '__main__':
+    os.chdir (os.path.abspath('../../data/imgs'))
+    im = Image ('face.jpg')
+
+    A = [ [0.5, 1] ,
+          [0.5, 1] ]
+
+    q= [A,A]
+
+
+    print (im.projection_in_D (q))
