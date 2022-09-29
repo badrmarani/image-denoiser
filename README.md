@@ -1,5 +1,7 @@
 # Variational Image Denoising
 
+In this project, we implemented Total Variation Minimization, in image denoising, using Fixed-Point algorithm and Projected Gradient Descent algorithm.
+
 ## Installation
 ### Dependencies
 
