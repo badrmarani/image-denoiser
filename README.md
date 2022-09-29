@@ -7,7 +7,7 @@ All of these Python dependencies, can be installed with `pip install -r requirem
 
 ## Quick example usage
 
-Evaluate Chambolle1 (Semi-implicit gradient descent algorithm applied to ROF) on a `face` image.
+Evaluate Chambolle1 (Semi-implicit gradient descent algorithm applied to ROF) on `girl.jpg`.
 
 ``` shell
 python main.py --max-iter 50 --sigma 50 --L 60 --epsilon 1e-4 --step-size .2
